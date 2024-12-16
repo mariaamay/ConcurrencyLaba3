@@ -94,12 +94,38 @@ void consumer(BlockingQueue<std::pair<char, Contact>>& taskQueue, std::unordered
                 continue;
             }
         }
-
+ 
         // Записываем контакт в файл
-        outputFiles[key] << contact.surname << " "
-                         << contact.name << " "
-                         << contact.patronymic << " "
-                         << contact.phone << "\n";
+    
+        bool contactExists = false;
+        if (std::filesystem::exists(filePath)) {
+            std::ifstream inputFile(filePath);
+            if (inputFile.is_open()) {
+                std::string line;
+                while (std::getline(inputFile, line)) {
+                    std::istringstream iss(line);
+                    Contact existingContact;
+                    if (std::getline(iss, existingContact.surname, ' ') &&
+                        std::getline(iss, existingContact.name, ' ') &&
+                        std::getline(iss, existingContact.patronymic, ' ') &&
+                        std::getline(iss, existingContact.phone, ' ')) {
+
+                        if (existingContact.surname == contact.surname &&
+                            existingContact.name == contact.name &&
+                            existingContact.patronymic == contact.patronymic &&
+                            existingContact.phone == contact.phone) {
+                            contactExists = true;
+                            break;
+                        }
+                    }
+                }
+                inputFile.close();
+            }
+        }
+
+        if (!contactExists) {
+            outputFiles[key] << contact.surname << " " << contact.name << " " << contact.patronymic << " " << contact.phone << "\n";
+        }
     }
 }
 
